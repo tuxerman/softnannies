@@ -7,28 +7,28 @@ ovs-ofctl del-flows brdn
 ovs-ofctl del-flows brup
 
 #adding the LAN interface to the first OVS
-ovs-vsctl add-port brdn eth0
-ovs-vsctl add-port brdn eth1
+ovs-vsctl add-port brdn eth10
+ovs-vsctl add-port brdn eth11
 
 #adding the WAN interface to the second OVS
 ovs-vsctl add-port brup WAN
 
 # create a tow virtual interface (the command create two virtual interface veth, This will create veth0 and veth1 )
-ovs-vsctl add-port brdn eth2
-ovs-vsctl set interface eth2 type=patch
-ovs-vsctl set interface eth2 options:peer=port2
+ovs-vsctl add-port brdn eth12
+ovs-vsctl set interface eth12 type=patch
+ovs-vsctl set interface eth12 options:peer=port2
 
-ovs-vsctl add-port brdn eth3
-ovs-vsctl set interface eth3 type=patch
-ovs-vsctl set interface eth3 options:peer=port3
+ovs-vsctl add-port brdn eth13
+ovs-vsctl set interface eth13 type=patch
+ovs-vsctl set interface eth13 options:peer=port3
 
 ovs-vsctl add-port brup port2
 ovs-vsctl set interface port2 type=patch
-ovs-vsctl set interface port2 options:peer=eth2
+ovs-vsctl set interface port2 options:peer=eth12
 
 ovs-vsctl add-port brup port3
 ovs-vsctl set interface port3 type=patch
-ovs-vsctl set interface port3 options:peer=eth3
+ovs-vsctl set interface port3 options:peer=eth13
 
 
 ip link add type veth
@@ -36,14 +36,14 @@ ip link add type veth
 # make sure all the physical and virtual interface are up and in promisc
 ifconfig veth0 up
 ifconfig veth1 up
-ifconfig eth0 up
-ifconfig eth1 up
+ifconfig eth10 up
+ifconfig eth11 up
 ifconfig wlan0 up
 
 ifconfig veth0 promisc
 ifconfig veth1 promisc
-ifconfig eth0 promisc
-ifconfig eth1 promisc
+ifconfig eth10 promisc
+ifconfig eth11 promisc
 ifconfig wlan0 promisc
 
 
