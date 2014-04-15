@@ -1,11 +1,12 @@
+from mininet.topo import Topo
 from mininet.net import Mininet
-from mininet.util import createLink
-from mininet.cli import CLI
+from mininet.node import CPULimitedHost
+from mininet.link import TCLink
 
-net = mininet()
+net = Mininet(topo=Topo, host=CPULimitedHost, link=TCLink)
 
 #create topology - two hosts, two switches, one controller
-nodeController = net.addController()
+#nodeController = net.addController()
 nodeH1 = net.addHost('H1')
 nodeSwitch1 = net.addSwitch('S1')
 nodeSwitch2 = net.addSwitch('S2')
