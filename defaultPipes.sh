@@ -6,68 +6,57 @@ ovs-vsctl add-br brup
 ovs-ofctl del-flows brdn
 ovs-ofctl del-flows brup
 
-#adding the LAN interface to the first OVS
-ovs-vsctl add-port brdn eth10
-ovs-vsctl add-port brdn eth11
-
-#adding the WAN interface to the second OVS
-ovs-vsctl add-port brup WAN
-
-# create a tow virtual interface (the command create two virtual interface veth, This will create veth0 and veth1 )
-ovs-vsctl add-port brdn eth12
-ovs-vsctl set interface eth12 type=patch
-ovs-vsctl set interface eth12 options:peer=port2
-
-ovs-vsctl add-port brdn eth13
-ovs-vsctl set interface eth13 type=patch
-ovs-vsctl set interface eth13 options:peer=port3
-
-ovs-vsctl add-port brup port2
-ovs-vsctl set interface port2 type=patch
-ovs-vsctl set interface port2 options:peer=eth12
-
-ovs-vsctl add-port brup port3
-ovs-vsctl set interface port3 type=patch
-ovs-vsctl set interface port3 options:peer=eth13
-
-
+#add a veth pair
 ip link add type veth
 
-# make sure all the physical and virtual interface are up and in promisc
-ifconfig veth0 up
-ifconfig veth1 up
-ifconfig eth10 up
-ifconfig eth11 up
-ifconfig wlan0 up
+#add host connections 
+#TODO : Add more hosts here as necessary
+ovs-vsctl add-port brdn eth1
 
-ifconfig veth0 promisc
-ifconfig veth1 promisc
-ifconfig eth10 promisc
-ifconfig eth11 promisc
-ifconfig wlan0 promisc
-
-
-#adding the virtual interfaces to the two OVS and make sure they are peered
-# TODO: What do these do?
-ovs-vsctl add-port brdn veth0
+#adding the WAN interface to the second OVS
+#this is our current gateway to the internet. On router, this is the WAN port.
+ovs-vsctl add-port brup eth0 
+ 
+######### CREATE LINKS ################
+# add a veth pair
+ip link add type veth
+ovs-vsctl add-port brdn veth0 
+ovs-vsctl add port brup veth1
+# add peering link between switches
+ovs-vsctl set interface veth1 options:peer=veth0
 ovs-vsctl set interface veth0 options:peer=veth1
 
-ovs-vsctl add-port brup veth1
-ovs-vsctl set interface veth1 options:peer=veth0
+# Up all the interfaces and set them to promiscous mode
+ifconfig eth0 up promisc
+ifconfig eth1 up promisc
+ifconfig veth0 up promisc
+ifconfig veth1 up promisc
+
 
 # Enable Spanning tree for both OVS
-ovs-vsctl --no-wait set bridge brdn stp_enable=true
-ovs-vsctl --no-wait set bridge brup stp_enable=true
+s1 ovs-vsctl --no-wait set bridge brdn stp_enable=true
+s1 ovs-vsctl --no-wait set bridge brup stp_enable=true
+
+# SET UP TC FOR ports
+s1 ovs-vsctl set Interface veth1 ingress_policing_rate=10000
+s1 ovs-vsctl set Interface veth0 ingress_policing_rate=10000
+s1 ovs-vsctl set Interface veth1 ingress_policing_burst=10000
+s1 ovs-vsctl set Interface veth0 ingress_policing_burst=10000
+
+# Add controller addresses to both bridges
+ovs-vsctl set-controller brdn tcp:0.0.0.0:6633
+ovs-vsctl set-fail-mode brdn secure
+ovs-vsctl set-controller brup tcp:0.0.0.0:6633
+ovs-vsctl set-fail-mode brup secure
 
 
-#adding the controller IP address to both virtual switches
-#ovs-vsctl set-controller brdn tcp:192.168.142.50:6633
-#ovs-vsctl set-fail-mode brdn secure
-
-#ovs-vsctl set-controller brup tcp:192.168.142.50:6633
-#ovs-vsctl set-fail-mode brup secure
-
+################### SCRAPYARD #############################
+# TC CODE: Doesnt work well here
 # Rate limiting the bandwidth between the two OVS to 1Mbps both virtual interfaces 
-tc qdisc add dev veth0 root tbf rate 1Mbit latency 1ms burst 10
-tc qdisc add dev veth1 root tbf rate 1Mbit latency 1ms burst 10
+#tc qdisc add dev dnEth root tbf rate 1Mbit latency 1ms burst 10
+#tc qdisc add dev upEth root tbf rate 1Mbit latency 1ms burst 10
+
+# MANUAL OVERRIDE: ADD STATIC FLOWS
+# s1 ovs-ofctl add-flow brdn in_port=2,actions=output:1 #CAUTION! RUN 's1 ovs-ofctl show brdn' ..
+# s1 ovs-ofctl add-flow brup in_port=1,actions=output:2 #CAUTION! .. and check port numbers before proceeding
 
