@@ -6,9 +6,6 @@ ovs-vsctl add-br brup
 ovs-ofctl del-flows brdn
 ovs-ofctl del-flows brup
 
-#add a veth pair
-ip link add type veth
-
 #add host connections 
 #TODO : Add more hosts here as necessary
 ovs-vsctl add-port brdn eth1
@@ -34,14 +31,14 @@ ifconfig veth1 up promisc
 
 
 # Enable Spanning tree for both OVS
-s1 ovs-vsctl --no-wait set bridge brdn stp_enable=true
-s1 ovs-vsctl --no-wait set bridge brup stp_enable=true
+ovs-vsctl --no-wait set bridge brdn stp_enable=true
+ovs-vsctl --no-wait set bridge brup stp_enable=true
 
 # SET UP TC FOR ports
-s1 ovs-vsctl set Interface veth1 ingress_policing_rate=10000
-s1 ovs-vsctl set Interface veth0 ingress_policing_rate=10000
-s1 ovs-vsctl set Interface veth1 ingress_policing_burst=10000
-s1 ovs-vsctl set Interface veth0 ingress_policing_burst=10000
+ovs-vsctl set Interface veth1 ingress_policing_rate=10000
+ovs-vsctl set Interface veth0 ingress_policing_rate=10000
+ovs-vsctl set Interface veth1 ingress_policing_burst=10000
+ovs-vsctl set Interface veth0 ingress_policing_burst=10000
 
 # Add controller addresses to both bridges
 ovs-vsctl set-controller brdn tcp:0.0.0.0:6633
@@ -57,6 +54,6 @@ ovs-vsctl set-fail-mode brup secure
 #tc qdisc add dev upEth root tbf rate 1Mbit latency 1ms burst 10
 
 # MANUAL OVERRIDE: ADD STATIC FLOWS
-# s1 ovs-ofctl add-flow brdn in_port=2,actions=output:1 #CAUTION! RUN 's1 ovs-ofctl show brdn' ..
-# s1 ovs-ofctl add-flow brup in_port=1,actions=output:2 #CAUTION! .. and check port numbers before proceeding
+# ovs-ofctl add-flow brdn in_port=2,actions=output:1 #CAUTION! RUN 's1 ovs-ofctl show brdn' ..
+# ovs-ofctl add-flow brup in_port=1,actions=output:2 #CAUTION! .. and check port numbers before proceeding
 
