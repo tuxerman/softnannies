@@ -1,4 +1,9 @@
-# create the tow OVS
+# set the WAN interface
+wanport=eth0
+
+# create the two OVS bridges
+ovs-vsctl del-br brdn
+ovs-vsctl del-br brup
 ovs-vsctl add-br brdn
 ovs-vsctl add-br brup
 
@@ -7,7 +12,11 @@ ovs-ofctl del-flows brdn
 ovs-ofctl del-flows brup
 
 #adding the WAN interface to the second OVS
-ovs-vsctl add-port brup eth0 
+ovs-vsctl add-port brup $wanport 
+
+#add host interfaces to brdn
+ovs-vsctl add-port brdn eth1
+#TODO make this dynamic as well
 
 #delete all veths
 for link in `ifconfig -a | grep vethUP | sed -r 's/(vethUP[0-9]+).*/\1/'`; 
@@ -24,14 +33,14 @@ IFS=,
 while read index macaddr tcvalue
 do
 	ip link add vethDN$index type veth peer name vethUP$index
-	ovs-vsctl add-port brdn vethDN$index
-	ovs-vsctl add port brup vethUP$index
-	# add peering link between switches
-	ovs-vsctl set interface vethDN$index options:peer=vethUP$index
-	ovs-vsctl set interface vethUP$index options:peer=vethDN$index
 	#interface up and promisc
 	ifconfig vethUP$index up promisc
 	ifconfig vethDN$index up promisc
+	ovs-vsctl add-port brdn vethDN$index
+	ovs-vsctl add-port brup vethUP$index
+	# add peering link between switches
+	ovs-vsctl set interface vethDN$index options:peer=vethUP$index
+	ovs-vsctl set interface vethUP$index options:peer=vethDN$index
 	#set TC
 	ovs-vsctl set Interface vethDN$index ingress_policing_rate=$tcvalue
 	ovs-vsctl set Interface vethUP$index ingress_policing_rate=$tcvalue
