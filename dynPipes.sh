@@ -24,6 +24,7 @@ ovs-vsctl add-port brup $wanport
 
 #add host interfaces to brdn
 ovs-vsctl add-port brdn eth1
+ovs-vsctl add-port brdn eth2
 #TODO make this dynamic as well
 
 #delete all veths
@@ -35,6 +36,8 @@ done
 #reset port number file
 rm portData.csv
 touch portData.csv
+
+echo "id,mac,tc,port_down,port_up,home" > portData.csv 
 
 #read csv file and set up pipes
 # number, MAC address, TC value
@@ -78,4 +81,4 @@ ovs-vsctl set-controller brup tcp:0.0.0.0:6633
 
 # get DHCP address
 echo 'Running dhclient'
-#dhclient brup
+dhclient brup
