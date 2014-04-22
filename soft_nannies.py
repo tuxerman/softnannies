@@ -26,17 +26,19 @@ access_configuration= "%s/pyretic/pyretic/examples/soft_nannies/portData.csv" % 
 #if true, then anyone can joing the network, otherwise only the devices with specific MACs as listed in policy_out.csv can
 access_mode = "%s/pyretic/pyretic/examples/soft_nannies/access_mode.csv" % os.environ[ 'HOME' ]
 
+#the port numbers for the defaul pipe for  both switches
+access_default = "%s/pyretic/pyretic/examples/soft_nannies/default.csv" % os.environ[ 'HOME' ]
+
 #a tuple for holding network configuration, i.e. forwarding port numbers for each host in the networks
 ACCESS_CONFIGURATION = namedtuple('ACCESS_CONFIGURATION', ('mac', 'tc', 'port_down', 'port_up', 'home'))
 #a tuple for holding access policies, i.e. which hosts in the network are restricted from accessing which sites
 ACCESS_POLICY = namedtuple('ACCESS_POLICY', ('src_mac', 'dst_ip', 't_begin', 't_end'))
+#a tuple for holding port numbers of the default pipe
+ACCESS_DEFAULT = namedtuple('ACCESS_DEFAULT', ('port_down', 'port_up'))
 
 
 #create the default switching behavior for the double switch architecture
-#@dynamic here means that the function below will create a new dynamic
-#policy class with the name "double_trouble"
-#@dynamic   
-#def double_trouble(self):
+#this function below will create a new dynamic policy class with the name "double_trouble"
 class double_trouble(DynamicPolicy):
     def __init__(self):
 	super(double_trouble, self).__init__()
@@ -56,11 +58,17 @@ class double_trouble(DynamicPolicy):
 	    access_m = {}
 	    for row in reader:
 		access_m[row['id']] = row['value']
-	
+	 #figure out the forwarding ports for the default pipe
+	self.access_d = none
+	with open(access_default, 'r') as a_default:
+            reader = DictReader(a_default, delimiter = ",")
+            for row in reader:
+                self.access_d = ACCESS_DEFAULT(row['port_down'], row['port_up']) 
+
 	if(int(access_m['1']) == 1):
-	    self.frwrd = flood() #fwd(6633); 
+	    self.frwrd = if_(match(switch=self.down_switch),fwd(int(self.access_d.port_down)),fwd(int(self.access_d.port_up))) #forward everything unrecognizable to a default port
 	else:
-	    self.frwrd = drop #very strict policy
+	    self.frwrd = drop  #very strict policy of dropping everything unrecognizable
 
 	#default query for receiving incoming packets
 	self.qry = packets(limit=1,group_by=['srcmac','switch'])
