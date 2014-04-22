@@ -7,9 +7,10 @@ Sriram Padnamabhan
 
 from pyretic.lib.corelib import *
 from pyretic.lib.std import *
+from pyretic.lib.query import *
 
 # insert the name of the module and policy you want to import
-from pyretic.modules.pyretic_switch import act_like_switch
+#from pyretic.modules.pyretic_switch import act_like_switch
 from collections import namedtuple
 from csv import DictReader
 
@@ -34,52 +35,67 @@ ACCESS_POLICY = namedtuple('ACCESS_POLICY', ('src_mac', 'dst_ip', 't_begin', 't_
 #create the default switching behavior for the double switch architecture
 #@dynamic here means that the function below will create a new dynamic
 #policy class with the name "double_trouble"
-@dynamic   
-def double_trouble(self):
-
+#@dynamic   
+#def double_trouble(self):
+class double_trouble(DynamicPolicy):
+    def __init__(self):
+	super(double_trouble, self).__init__()
     
-    #this will be static;
-    #these are ids of the vswitches
-    self.down_switch = 1 #int("0x0000080027b1d7f1",16)
-    self.up_switch = 2 #int("0x0000080027b7bf8b",16) 
-   
-    #figure out if all packets should be flooded or dropped initially by default 
-    with open(access_mode, 'r') as a_mode:
-        reader = DictReader(a_mode, delimiter = ",")
-        access_m = {}
-        for row in reader:
-            access_m[row['id']] = row['value']
-    
-    if(int(access_m['1']) == 1):
-	self.frwrd = flood() #fwd(6633); 
-    else:
-	self.frwrd = drop #very strict policy
-
-    #default query for receiving incoming packets
-    self.qry = packets(limit=1,group_by=['srcmac','switch'])
-  
-    #set the initial internal policy value
-    self.policy = self.frwrd + self.qry
-
+	#this will be static;
+	#these are ids of the vswitches
+	self.up_switch = int("0x0000080027b1d7f1",16)
+	self.down_switch = int("0x00000800278507d5",16)
 	
-    #update the forwarding configuration from the access configuration policy file
-    with open(access_configuration, 'r') as c_file:
-   	reader = DictReader(c_file, delimiter = ",")
-        access_c = {}
-        for row in reader:
-	    access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'])
-    for policy in access_c.itervalues():
- 	self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.port_down)),self.policy)
-    	self.policy = self.frwrd + self.qry
-	self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.up_switch),fwd(int(policy.port_up)),self.policy)
-    	self.policy = self.frwrd + self.qry
+	#WAN, HOST PORTS
+	self.port_wan = 1
+	self.port_h1 = 1 
+       
+	#figure out if all packets should be flooded or dropped initially by default 
+	with open(access_mode, 'r') as a_mode:
+	    reader = DictReader(a_mode, delimiter = ",")
+	    access_m = {}
+	    for row in reader:
+		access_m[row['id']] = row['value']
+	
+	if(int(access_m['1']) == 1):
+	    self.frwrd = flood() #fwd(6633); 
+	else:
+	    self.frwrd = drop #very strict policy
+
+	#default query for receiving incoming packets
+	self.qry = packets(limit=1,group_by=['srcmac','switch'])
+      
+	#set the initial internal policy value
+	self.policy = self.frwrd + self.qry
+
+	#update the forwarding configuration from the access configuration policy file
+	with open(access_configuration, 'r') as c_file:
+	    reader = DictReader(c_file, delimiter = ",")
+            access_c = {}
+            for row in reader:
+	        access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'])
+	for policy in access_c.itervalues():
+	    self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.port_down)),self.policy)
+	    self.policy = self.frwrd + self.qry
+	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.up_switch),fwd(int(policy.port_up)),self.policy)
+	    self.policy = self.frwrd + self.qry
+
+	    self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.up_switch),fwd(self.port_wan),self.policy)
+	    self.policy = self.frwrd + self.qry
+	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.down_switch),fwd(self.port_h1),self.policy)
+	    self.policy = self.frwrd + self.qry
+	
+	#learn_from_a_packet is called back every time our query sees a new packet
+	self.qry.register_callback(self.learn_from_a_packet)
+
+	print 'double_trouble is a go\n'
 
     #the following logc was borrowed from the pyretic_switch module
     #the idea is to take each new packet pkt and update the forwarding policy
     #so that subsequent incoming packets on this switch whose dstmac matches pkt's srcmac 
     #(accessed like in a dictionary pkt['srcmac']) will be forwarded out  pkt's inport 
     #(pyretic packets are located, so this value is accessed just like srcmac,i.e., p['inport'])
-    def learn_from_a_packet(pkt):
+    def learn_from_a_packet(self,pkt):
         #set the forwarding policy
         self.frwrd = if_(match(dstmac=pkt['srcmac'],
                                  switch=pkt['switch']), fwd(pkt['inport']),
@@ -87,13 +103,6 @@ def double_trouble(self):
         #update the overall policy
         self.policy = self.frwrd + self.qry
         #print self.policy 
-
-    #learn_from_a_packet is called back every time our query sees a new packet
-    self.qry.register_callback(learn_from_a_packet)
-
-    print 'double_trouble is a go\n'
-
-
 
 #the main method sets up access control filters and calls
 #the double_trouble (double-switch) architecture
