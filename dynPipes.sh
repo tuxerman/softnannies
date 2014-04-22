@@ -52,10 +52,11 @@ do
 	ovs-vsctl add-port brdn vethDN$index
 	ovs-vsctl add-port brup vethUP$index
 
-	#write out the port number
+	#write out the port numbers
 	portUp=`ovs-ofctl show brup | grep vethUP$index | sed -r 's/ ([0-9]+).*/\1/'`
-        portDn=`ovs-ofctl show brdn | grep vethDN$index | sed -r 's/ ([0-9]+).*/\1/'`
-	echo $index,$macaddr,$tcvalue,$portDn,$portUp >> portData.csv	
+    portDn=`ovs-ofctl show brdn | grep vethDN$index | sed -r 's/ ([0-9]+).*/\1/'`
+    portHome=`ovs-ofctl show brdn | grep eth$index | sed -r 's/ ([0-9]+).*/\1/'`
+	echo $index,$macaddr,$tcvalue,$portDn,$portUp,$portHome >> portData.csv	
 	
 	# add peering link between switches
 	ovs-vsctl set interface vethDN$index options:peer=vethUP$index
