@@ -82,7 +82,7 @@ class double_trouble(DynamicPolicy):
 
 	    self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.up_switch),fwd(self.port_wan),self.policy)
 	    self.policy = self.frwrd + self.qry
-	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.port_up)),self.policy)
+	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.home)),self.policy)
 	    self.policy = self.frwrd + self.qry
 	
 	#learn_from_a_packet is called back every time our query sees a new packet
