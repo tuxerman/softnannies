@@ -27,7 +27,7 @@ access_configuration= "%s/pyretic/pyretic/examples/soft_nannies/portData.csv" % 
 access_mode = "%s/pyretic/pyretic/examples/soft_nannies/access_mode.csv" % os.environ[ 'HOME' ]
 
 #a tuple for holding network configuration, i.e. forwarding port numbers for each host in the networks
-ACCESS_CONFIGURATION = namedtuple('ACCESS_CONFIGURATION', ('mac', 'tc', 'port_down', 'port_up'))
+ACCESS_CONFIGURATION = namedtuple('ACCESS_CONFIGURATION', ('mac', 'tc', 'port_down', 'port_up', 'home'))
 #a tuple for holding access policies, i.e. which hosts in the network are restricted from accessing which sites
 ACCESS_POLICY = namedtuple('ACCESS_POLICY', ('src_mac', 'dst_ip', 't_begin', 't_end'))
 
@@ -73,7 +73,7 @@ class double_trouble(DynamicPolicy):
 	    reader = DictReader(c_file, delimiter = ",")
             access_c = {}
             for row in reader:
-	        access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'])
+	        access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'], row['home'])
 	for policy in access_c.itervalues():
 	    self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.port_down)),self.policy)
 	    self.policy = self.frwrd + self.qry
@@ -82,7 +82,7 @@ class double_trouble(DynamicPolicy):
 
 	    self.frwrd = if_(match(srcmac=MAC(policy.mac),switch=self.up_switch),fwd(self.port_wan),self.policy)
 	    self.policy = self.frwrd + self.qry
-	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.down_switch),fwd(self.port_h1),self.policy)
+	    self.frwrd = if_(match(dstmac=MAC(policy.mac),switch=self.down_switch),fwd(int(policy.port_up)),self.policy)
 	    self.policy = self.frwrd + self.qry
 	
 	#learn_from_a_packet is called back every time our query sees a new packet
