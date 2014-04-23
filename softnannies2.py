@@ -28,6 +28,15 @@ ACCESS_POLICY = namedtuple('ACCESS_POLICY', ('src_mac', 'dst_ip', 't_begin', 't_
 #a tuple for holding port numbers of the default pipe
 ACCESS_DEFAULT = namedtuple('ACCESS_DEFAULT', ('port_down', 'port_up'))
 
+def PolicyManager(access_c, DeviceID, Max):
+    policy = access_c[DeviceID]
+    if DeviceID-1 == Max:
+        return identity
+    return if_(match(srcmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.port_down)),
+                if_(match(dstmac=MAC(policy.mac),switch=up_switch),fwd(int(policy.port_up)),
+                    if_(match(srcmac=MAC(policy.mac),switch=up_switch),fwd(port_wan),
+                        if_(match(dstmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.home)),PolicyManager(access_c, DeviceID+1, Max)))))
+
 def main():
 
     # GLOBALS #############################
@@ -58,13 +67,15 @@ def main():
 	    reader = DictReader(c_file, delimiter = ",")
             access_c = {}
             for row in reader:
-	        access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'], row['home'])
+	           access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'], row['home'])
 
-    for policy in access_c.itervalues():
-        portPolicy = portPolicy +  if_(match(srcmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.port_down)),
-	    		if_(match(dstmac=MAC(policy.mac),switch=up_switch),fwd(int(policy.port_up)),
-	    			if_(match(srcmac=MAC(policy.mac),switch=up_switch),fwd(port_wan),
-	    				if_(match(dstmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.home)),drop))))
+    portPolicy = PolicyManager(access_c, 1, len(access_c))
+
+    # for policy in access_c.itervalues():
+    #     portPolicy = portPolicy +  if_(match(srcmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.port_down)),
+	   #  		if_(match(dstmac=MAC(policy.mac),switch=up_switch),fwd(int(policy.port_up)),
+	   #  			if_(match(srcmac=MAC(policy.mac),switch=up_switch),fwd(port_wan),
+	   #  				if_(match(dstmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.home)),drop))))
 
 	#portPolicy = if_(portPolicy, identity, drop)
 
