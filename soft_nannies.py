@@ -66,7 +66,9 @@ class double_trouble(DynamicPolicy):
                 self.access_d = ACCESS_DEFAULT(row['port_down'], row['port_up']) 
 
 	if(int(access_m['1']) == 1):
-	    self.frwrd = if_(match(switch=self.down_switch),fwd(int(self.access_d.port_down)),fwd(int(self.access_d.port_up))) #forward everything unrecognizable to a default port
+	    self.frwrd = if_(match(switch=self.down_switch, inport!=int(self.access_d.port_down)), fwd(int(self.access_d.port_down)),
+			    if_(match(switch=self.up_switch, inport=int(self.access_d.port_up)), fwd(1), 
+			        if_(match(switch=self.up_switch, inport=1, fwd(int(self.access_d.port_up)), flood())))) #forward everything unrecognizable to a default port
 	else:
 	    self.frwrd = drop  #very strict policy of dropping everything unrecognizable
 
