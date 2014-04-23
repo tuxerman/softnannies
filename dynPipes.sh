@@ -49,8 +49,18 @@ ifconfig vethDEFdn up promisc
 ovs-vsctl add-port brup vethDEFup
 ovs-vsctl add-port brdn vethDEFdn
 
+ovs-vsctl set interface vethDEFdn options:peer=vethDEFup
+ovs-vsctl set interface vethDEFup options:peer=vethDEFdn
+
 portDefUp=`ovs-ofctl show brup | grep vethDEFup | sed -r 's/ ([0-9]+).*/\1/'`
 portDefDn=`ovs-ofctl show brdn | grep vethDEFdn | sed -r 's/ ([0-9]+).*/\1/'`
+
+#set TC for default pipe
+ovs-vsctl set Interface vethDEFup ingress_policing_rate=5000
+ovs-vsctl set Interface vethDEFdn ingress_policing_rate=5000
+ovs-vsctl set Interface vethDEFdn ingress_policing_burst=5000
+ovs-vsctl set Interface vethDEFup ingress_policing_burst=5000
+
 
 echo 'Writing out default pipe port numbers to default.csv...'
 rm default.csv
