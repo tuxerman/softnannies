@@ -1,13 +1,39 @@
 from pyretic.lib.corelib import *
 from pyretic.lib.std import *
 from pyretic.lib.query import *
+from pyretic.modules.mac_learner import * 
+
+from collections import namedtuple
+from csv import DictReader
+
+import os
+import csv
+
+#list of websites/ip addresses that should not be accessed by certain MAC addresses outside a certain range of time
+access_policies = "%s/pyretic/pyretic/examples/soft_nannies/access_policies.csv" % os.environ[ 'HOME' ] 
+
+#list of mac addresses and their corresponding forwarding port numbers 
+access_configuration= "%s/pyretic/pyretic/examples/soft_nannies/portData.csv" % os.environ[ 'HOME' ] 
+
+#if true, then anyone can joing the network, otherwise only the devices with specific MACs as listed in policy_out.csv can
+access_mode = "%s/pyretic/pyretic/examples/soft_nannies/access_mode.csv" % os.environ[ 'HOME' ]
+
+#the port numbers for the defaul pipe for  both switches
+access_default = "%s/pyretic/pyretic/examples/soft_nannies/default.csv" % os.environ[ 'HOME' ]
+
+#a tuple for holding network configuration, i.e. forwarding port numbers for each host in the networks
+ACCESS_CONFIGURATION = namedtuple('ACCESS_CONFIGURATION', ('mac', 'tc', 'port_down', 'port_up', 'home'))
+#a tuple for holding access policies, i.e. which hosts in the network are restricted from accessing which sites
+ACCESS_POLICY = namedtuple('ACCESS_POLICY', ('src_mac', 'dst_ip', 't_begin', 't_end'))
+#a tuple for holding port numbers of the default pipe
+ACCESS_DEFAULT = namedtuple('ACCESS_DEFAULT', ('port_down', 'port_up'))
 
 def main():
 
-	# GLOBALS #############################
-	up_switch = int("0x0000080027b1d7f1",16)
-	down_switch = int("0x00000800278507d5",16)
-	port_wan = 1
+    # GLOBALS #############################
+    up_switch = int("0x0000080027b1d7f1",16)
+    down_switch = int("0x00000800278507d5",16)
+    port_wan = 1
 
     #default policy does not match anything
     not_allowed = none
@@ -27,24 +53,24 @@ def main():
     allowed = ~not_allowed
 
     ############# PORT FORWARDS #################
-    portPolicy = flood()
+    portPolicy = drop
     with open(access_configuration, 'r') as c_file:
 	    reader = DictReader(c_file, delimiter = ",")
             access_c = {}
             for row in reader:
 	        access_c[row['id']] = ACCESS_CONFIGURATION(row['mac'], row['tc'], row['port_down'], row['port_up'], row['home'])
 
-	for policy in access_c.itervalues():
-	    portPolicy += 
-
-	    if_(match(srcmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.port_down)),
+    for policy in access_c.itervalues():
+        portPolicy = portPolicy +  if_(match(srcmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.port_down)),
 	    		if_(match(dstmac=MAC(policy.mac),switch=up_switch),fwd(int(policy.port_up)),
 	    			if_(match(srcmac=MAC(policy.mac),switch=up_switch),fwd(port_wan),
-	    				if_(match(dstmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.home)),portPolicy))))
+	    				if_(match(dstmac=MAC(policy.mac),switch=down_switch),fwd(int(policy.home)),drop))))
+
+	#portPolicy = if_(portPolicy, identity, drop)
 
     ############# FINAL POLICY ###############
 
     #send only allowed packets to the double-switch architecture
-    #return allowed >> portPolicy >> mac_learner()
-    return allowed >> mac_learner()
+    return allowed >> portPolicy >> mac_learner()
+    #return allowed >> mac_learner()
 
