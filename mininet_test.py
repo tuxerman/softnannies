@@ -7,6 +7,7 @@ net = Mininet(topo=Topo, host=CPULimitedHost, link=TCLink)
 
 #create topology - two hosts, two switches, one controller
 #nodeController = net.addController()
+net.addController( 'c0', controller=RemoteController, ip='127.0.0.1', port=6633 )
 nodeH1 = net.addHost('H1')
 nodeSwitch1 = net.addSwitch('S1')
 nodeSwitch2 = net.addSwitch('S2')
@@ -14,7 +15,7 @@ nodeH2 = net.addHost('H2')
 
 #create links
 net.addLink(nodeH1, nodeSwitch1)
-net.addLink(nodeSwitch1, nodeSwitch2)
+net.addLink(nodeSwitch1, nodeSwitch2, bw=10)
 net.addLink(nodeH2, nodeSwitch2)
 
 #configure IP addresses
