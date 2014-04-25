@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+#Georgia Tech CS6675 Spring 2014 Course Project: SoftNannies 
+#Karim Habak
+#Robert Lychev
+#Sriram Padnamabhan
+
+
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import CPULimitedHost
@@ -10,14 +16,10 @@ from mininet.node import RemoteController
 from mininet.cli import CLI
 
 
+#CREATE A TOPOLOGY WHERE EVERY HOST COMPETES FOR THE SAME BANDWIDTH
 class crazy_switches(Topo):
-    "Linear topology of k switches, with one host per switch."
 
     def __init__(self, **opts):
-        """Init.
-           k: number of switches (and hosts)
-           hconf: host configuration options
-           lconf: link configuration options"""
 
         super(crazy_switches, self).__init__(**opts)
 
@@ -33,7 +35,6 @@ class crazy_switches(Topo):
         s1 = self.addSwitch('s1')
         s2 = self.addSwitch('s2')
         
-        # 10 Mbps, 5ms delay, 1% loss, 1000 packet queue
         self.addLink(w1, s2, bw=40)
         self.addLink(w2, s2, bw=50)
         self.addLink(w3, s2, bw=100)
@@ -45,7 +46,6 @@ class crazy_switches(Topo):
 
 
 def perfTest():
-    "Create network and run simple performance test"
     topo = crazy_switches()
     net = Mininet(topo=topo, controller=lambda name: RemoteController( 'c0', '127.0.0.1' ),
                   host=CPULimitedHost, link=TCLink)
