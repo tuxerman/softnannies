@@ -1,3 +1,11 @@
+'''
+Georgia Tech CS6675 Spring 2014 Course Project: SoftNannies 
+Karim Habak
+Robert Lychev
+Sriram Padnamabhan
+'''
+
+
 from pyretic.lib.corelib import *
 from pyretic.lib.std import *
 from pyretic.lib.query import *
