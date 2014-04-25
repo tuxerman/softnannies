@@ -1,0 +1,65 @@
+NETWORK EMULATION TOPOLOGY 1, w3 IS RUNNING AN iperf SERVER
+units for all measurements are Mbits/sec
+each experiments presents results from 5 trials
+
+
+(1) each host by itself iperf for 30 sec:
+
+h1: 27.9,27.9,27.9,27.9,27.6  ave=27.84 and sd = .13
+h2: 27.9,27.9,27.9,28.0,27.9  ave=27.92 and sd = .04
+h3: 27.9,28.0,28.0,28.0,27.9  ave=27.96 and sd = .05
+h4: 28.0,27.8,27.8,28.0,27.9  ave=27.90 and sd = .10
+
+
+(2) h1 iperf for 30 sec, then h2 after 7 sec iperf for 23 sec
+
+h1:24.8,23.1,23.7,23.0,24.5  ave=23.82 and sd = .81
+h2:4.31,6.47,5.30,6.46,6.82  ave=5.87 and sd = 1.05
+
+
+
+(3) h1 iperf for 30 sec, then h2 after 7 sec iperf for 23 sec, then h3 after 7 sec iperf for 16 sec: 
+
+h1 23.9,22.7,23.5,23.9,23.8  ave=23.56 and sd = .51
+h2 3.72,6.11,3.67,3.73,3.79  ave=4.20 and sd = 1.07
+h3 2.54,1.83,3.64,2.94,2.53  ave=2.70 and sd = .66
+
+
+(4) h1 iperf for 30 sec, then h2 after 7 sec iperf for 23 sec, then h3 after 7 sec iperf for 16 sec, then h4 after 6 sec iperf for 10 sec:
+
+h1 21.4,22.6,23.5,22.4,23.3  ave=22.64 and sd = .83
+h2 5.37,6.00,6.01,5.68,5.82  ave=5.78 and sd = .27
+h3 1.47,.90,2.00,1.39,2.42   ave=1.67 and sd = .57
+h4 1.77,1.44,2.06,1.75,.81   ave=1.57 and sd = .48
+
+
+
+
+NETWORK EMULATION TOPOLOGY 2, w3 IS RUNNING AN iperf SERVER
+units for all measurements are Mbits/sec
+each experiments presents results from 5 trials
+
+(5) h1 iperf for 30 sec, then h2 after 7 sec iperf for 23 sec, then h3 after 7 sec iperf for 16 sec, then h4 after 6 sec iperf for 10 sec:
+
+h1 9.34,9.82,9.81,9.80,9.81  ave=9.72 and sd = .21
+h2 9.14,9.92,9.90,9.89,9.93  ave=9.76 and sd = .34
+h3 8.89,8.73,8.95,9.00,9.09  ave=8.93 and sd = .13
+h4 1.65,1.73,1.56,1.55,1.60  ave=1.62 and sd = .07
+
+
+
+
+NETWORK EMULATION TOPOLOGY 6, w3 IS RUNNING AN iperf SERVER
+units for all measurements are Mbits/sec
+each experiments presents results from 5 trials
+
+(6) h1 iperf for 30 sec, then h2 after 7 sec iperf for 23 sec, then h3 after 7 sec iperf for 16 sec, then h4 after 6 sec iperf for 10 sec:
+
+h1 9.81,9.81,9.82,9.82,9.81  ave=9.81 and sd = .01
+h2 9.91,9.93,9.92,9.90,9.92  ave=9.92 and sd = .01
+h3 4.95,4.98,4.95,5.02,4.96  ave=4.97 and sd = .03
+h4 4.95,5.01,4.93,5.00,4.95  ave=4.97 and sd = .03
+
+
+
+
