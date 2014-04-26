@@ -1,0 +1,27 @@
+The following is a list of directions one must take to run our SoftNannies controller module.
+
+(1) Our Controller code was writen in Pyretic (which runs on top of Pox), so to run it one must must download Pox and Pyretic.  Put our module called soft_nannies.py in the ~pyretic/pyretic/examples/ directory.
+
+(2) The soft_nannies.py module takes as input configuration files access_mode.csv, access_policies.csv, portData.csv, and default.csv.  All files must have the first row list all the tags for each column as will be described below.  All files except default.csv must have the first column represent the row number. 
+
+portData.csv must be of the following form: <id>,<mac>,<tc>,<port_down>,<port_up>,<home>    
+Here mac is a mac address of a host in the network, tc is the traffic control value, port_down and port_up correspond to that host's allocated pipe ports on the down and up switches, where home is the port number that corresponds to that host on the down switch. 
+
+access_policies.csv must be of the following form: <id>,<src_mac>,<dst_ip>,<t_begin>,<t_end>
+Here src_mac is the mac address of a host in the network, dst_ip represents an ip address of an entity that that host should not be able to reach (and vice versa) between the times of t_begin and t_end.
+
+default.csv must be of the following form: <port_down>,<port_up>
+Here port_down and port_up correspond to the port numbers of the default pipe that is to be used for hosts with mac addresses that are not listed in the portData.csv file.
+This should typically be just a single row.
+
+access_mode must be of the following form: <id>,<value>    
+Here value is either 1 or 0. If it's 1, then access is open to any host, and hosts that are not listed in the portData.csv file will have to take the default pipe.  If it's 0, then only the hosts whose mac addreses are listed in the portData.csv file are allowed to access the network.
+
+
+(3) Create a directory called soft_nannies inside ~pyretic/pyretic/examples/soft_nannies/ and put all the supporting configuration files inside ~pyretic/pyretic/examples/soft_nannies/ directory.
+
+(4) To run the code, one must be in the directory where Pox and Pyretic were downloaded and make a call 'pyretic.py pyretic.examples.soft_nanies'
+
+(5) One must set up the topologies either within the mininet environment or with actual openvswitches as described in the other readme file.
+
+(6) To set up topologies (sf_topo_x.py for x in {1, 2, 3}) in the mininet environment, one must make a call 'sudo ./sf_topo_x.py
