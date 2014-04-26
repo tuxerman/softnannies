@@ -1,0 +1,46 @@
+INTRODUCTION
+
+		The dynPipes.sh file sets up an openFlow topology consisting of two bridges and multiple 
+		flow-links (which we refer to as 'pipes' for network traffic) on any openflow enabled system. 
+		This could be a router or any regular linux box that is required to act as a switch connecting 
+		all the devices on the home network.
+
+		The file also sets up a default pipe besides the dedicated pipes for the hosts specified.
+
+	Helper files:
+
+	1. tcdata.csv: This is a comma-separated file containing the details of hosts, their MAC addresses 
+	and the bandwidth desired to be made available for them. The input format is as follows:
+	
+		<id>,<MAC address of host>,<bandwidth desired in kbps>
+	
+	Example:
+
+		1,00:01:02:03:04:05,10000
+		2,00:01:02:03:04:06,20000
+
+		This specifies that the host with the MAC address ending in 05 gets 10Mbps and the other host 
+		gets 20Mbps.
+
+RUNNING INFORMATION
+	
+	To set up the topology on a network, simply run the script as root. It generates helper files that
+	the controller reads in order for its operation. These files are generated in the same directory. 
+	In an actual deployment, this would have to be done in the same folder as the controller script runs
+	from.
+
+CODE INFORMATION
+
+	1. Two open v-switches are created - brdn and brup.
+	2. Spanning trees are enabled on both bridges to avoid a loop being formed in the network path 
+	   while forwarding.
+	3. The (ethernet) ports of the hosts that are connected on the home network are added on brdn.
+	4. The default pipe is created. A pair of veth ports are created. One of them added to brdn and
+	   the other to brup. The open vswitch port numbers are read from ovs-ofctl and added to the helper
+	   file named portData.csv that the controller reads to know the port numbers to which to forward 
+	   data to.
+	5. Step 4 is repeated for all the entries in tcdata.csv. This sets up pipes for all the hosts that
+	   been mentioned in it. Traffic shaping is also done on each link to limit bandwidth.
+	6. A controller at localhost port 6633 is added to both switches. 
+	7. Finally, internet connection is enabled by connecting brup to the DHCP service.
+
